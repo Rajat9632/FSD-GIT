@@ -1,35 +1,16 @@
 #!/bin/bash
 set -e
 
-echo "📦 Step 1: Installing dependencies..."
+echo "Installing dependencies..."
 python3 -m pip install -r requirements.txt
 
 echo ""
-echo "🗄️  Step 2: Running Django migrations..."
+echo "Running migrations..."
 python3 run_migrations.py
-MIGRATIONS_EXIT=$?
-
-if [ $MIGRATIONS_EXIT -ne 0 ]; then
-    echo "⚠️  Migrations completed with warnings (code: $MIGRATIONS_EXIT)"
-else
-    echo "✅ Migrations succeeded"
-fi
 
 echo ""
-echo "🚗 Step 3: Importing vehicle data..."
-python3 manage.py import_vehicle_data
-if [ $? -ne 0 ]; then
-    echo "❌ Vehicle import failed!"
-    exit 1
-fi
-
-echo ""
-echo "� Step 3b: Verifying vehicle import..."
-python3 manage.py check_vehicles
-
-echo ""
-echo "�📂 Step 4: Collecting static files..."
+echo "Collecting static files..."
 python3 manage.py collectstatic --noinput --clear
 
 echo ""
-echo "✨ Build completed successfully!"
+echo "Build complete! Vehicle data will load automatically on app startup."
