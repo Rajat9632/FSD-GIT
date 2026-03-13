@@ -88,6 +88,9 @@ logger = logging.getLogger(__name__)
 def journey_list(request):
     journeys = Journey.objects.select_related('car').filter(car__isnull=False).exclude(car__nickname__exact='')
     logger.debug(f"Filtered journeys count: {journeys.count()}")
+    # Add fuel_used to each journey object (property already in model)
+    for journey in journeys:
+        journey.fuel_used_value = journey.fuel_used
     return render(request, 'carbontracker/journey_list.html', {'journeys': journeys})
 
 from django.forms import DateField

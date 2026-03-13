@@ -130,6 +130,25 @@ class Journey(models.Model):
         self.calculate_total_emission()
         super().save(*args, **kwargs)
 
+    @property
+    def fuel_used(self):
+        if self.car and self.route:
+            # Convert distances from km to miles for calculation consistency
+            city_miles = self.route.city_distance / 1.609
+            highway_miles = self.route.highway_distance / 1.609
+            # Define degradation factor for driving conditions
+            driving_conditions_factors = {
+                'normal': 0.0,
+                'heavy_traffic': 0.05,
+                'off_road': 0.1,
+            }
+            driving_conditions_factor = driving_conditions_factors.get(self.driving_conditions, 0.0)
+            total_fuel_usage = (city_miles / self.car.city_km_per_gallon) + (highway_miles / self.car.highway_km_per_gallon)
+            # Apply degradation factor to fuel usage
+            total_fuel_usage *= (1 + driving_conditions_factor)
+            return total_fuel_usage
+        return 0.0
+
     def __str__(self):
         return f"Journey on {self.journey_date} by {self.trans_mode}"
 
