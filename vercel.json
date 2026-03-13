@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "bash build_files.sh",
+  "buildCommand": "bash build.sh",
   "builds": [
     {
       "src": "django_carbonomitter/wsgi.py",
