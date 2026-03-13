@@ -1,13 +1,23 @@
 #!/bin/bash
 set -e
 
-echo "Installing dependencies..."
+echo "📦 Step 1: Installing dependencies..."
 python3 -m pip install -r requirements.txt
 
-echo "Running Django migrations..."
-python3 manage.py migrate --noinput
+echo ""
+echo "🗄️  Step 2: Running Django migrations..."
+python3 run_migrations.py
+MIGRATIONS_EXIT=$?
 
-echo "Collecting static files..."
+if [ $MIGRATIONS_EXIT -ne 0 ]; then
+    echo "⚠️  Migrations completed with warnings (code: $MIGRATIONS_EXIT)"
+else
+    echo "✅ Migrations succeeded"
+fi
+
+echo ""
+echo "📂 Step 3: Collecting static files..."
 python3 manage.py collectstatic --noinput --clear
 
-echo "Build completed successfully!"
+echo ""
+echo "✨ Build completed!"

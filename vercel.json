@@ -1,14 +1,7 @@
 {
   "version": 2,
+  "buildCommand": "bash build.sh",
   "builds": [
-    {
-      "src": "manage.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxLambdaSize": "15mb",
-        "runtime": "python3.12"
-      }
-    },
     {
       "src": "django_carbonomitter/wsgi.py",
       "use": "@vercel/python",
