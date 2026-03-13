@@ -68,11 +68,15 @@ TEMPLATES = [
 WSGI_APPLICATION = 'django_carbonomitter.wsgi.application'
 
 # Database configuration
-# VERSION MARKER: DATABASE_MIGRATION_V4
-print("DEBUG: ATTEMPTING POSTGRES CONNECTION V4")
+# Read from environment variable for security
+DATABASE_URL = os.getenv(
+    'DATABASE_URL',
+    'postgresql://localhost/neondb'  # fallback for local dev only
+)
+
 DATABASES = {
     'default': dj_database_url.config(
-        default="postgresql://neondb_owner:npg_wCPxUnzc7th2@ep-floral-truth-a1nlbm77-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require",
+        default=DATABASE_URL,
         conn_max_age=600,
         conn_health_checks=True,
     )
