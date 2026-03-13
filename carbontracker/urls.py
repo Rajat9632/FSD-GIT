@@ -23,6 +23,7 @@ urlpatterns = [
     path('emission-fuel-charts/', views.emission_fuel_charts, name='emission_fuel_charts'),
     path('emission-ranking/', views.emission_ranking, name='emission_ranking'),
     path('api/create_route/', views.api_create_route, name='api_create_route'),
+    path('debug/vehicles/', views.debug_vehicles, name='debug_vehicles'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('register/', views.register_view, name='register'),

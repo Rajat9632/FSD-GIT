@@ -394,3 +394,27 @@ def api_create_route(request):
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+# Debug endpoint to check vehicle database status
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+
+@require_http_methods(["GET"])
+def debug_vehicles(request):
+    """Debug endpoint to check vehicle database status - Remove in production"""
+    total = Car.objects.count()
+    available = Car.objects.filter(is_user_vehicle=False).count()
+    user_vehicles = Car.objects.filter(is_user_vehicle=True).count()
+    
+    samples = []
+    if available > 0:
+        for car in Car.objects.filter(is_user_vehicle=False)[:3]:
+            samples.append(f"{car.make} {car.model} ({car.year})")
+    
+    return JsonResponse({
+        'total_vehicles': total,
+        'available_for_users': available,
+        'user_added_vehicles': user_vehicles,
+        'sample_vehicles': samples,
+        'status': 'OK' if available > 0 else 'ERROR - No vehicles in database'
+    })

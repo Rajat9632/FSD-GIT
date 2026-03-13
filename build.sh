@@ -24,7 +24,11 @@ if [ $? -ne 0 ]; then
 fi
 
 echo ""
-echo "📂 Step 4: Collecting static files..."
+echo "� Step 3b: Verifying vehicle import..."
+python3 manage.py check_vehicles
+
+echo ""
+echo "�📂 Step 4: Collecting static files..."
 python3 manage.py collectstatic --noinput --clear
 
 echo ""
