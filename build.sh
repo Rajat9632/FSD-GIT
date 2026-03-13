@@ -16,7 +16,11 @@ else
 fi
 
 echo ""
-echo "📂 Step 3: Collecting static files..."
+echo "� Step 3: Importing vehicle data..."
+python3 manage.py import_vehicle_data || echo "⚠️  Vehicle import skipped (data file not found in build environment)"
+
+echo ""
+echo "📂 Step 4: Collecting static files..."
 python3 manage.py collectstatic --noinput --clear
 
 echo ""
