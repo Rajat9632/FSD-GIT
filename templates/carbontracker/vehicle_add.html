@@ -15,44 +15,53 @@
     <main class="w-full max-w-3xl bg-white rounded shadow p-6">
         <form method="get" action="" class="mb-6">
             <div class="mb-4">
-                {{ search_form.as_p }}
+                <label for="search_query" class="block font-semibold mb-2">Search Vehicles:</label>
+                <input type="text" name="search_query" id="search_query" 
+                       placeholder="Enter make, model, or year (e.g., Honda, Civic, 2020)" 
+                       value="{{ search_query }}"
+                       class="w-full border border-gray-300 rounded px-3 py-2 mb-2"
+                       minlength="2" />
+                <small class="text-gray-600">Type at least 2 characters to search</small>
             </div>
             <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition">
                 Search
             </button>
         </form>
 
-        <form method="post" action="">
-            {% csrf_token %}
-            <div class="mb-4">
-                <label for="vehicle_id" class="block font-semibold mb-1">Select Vehicle:</label>
-                <select name="vehicle_id" id="vehicle_id" required class="w-full border border-gray-300 rounded px-3 py-2">
-                    <option value="">-- Select a vehicle --</option>
-                    {% for vehicle in vehicles %}
-                        <option value="{{ vehicle.id }}">{{ vehicle.make }} {{ vehicle.model }} ({{ vehicle.year }})</option>
-                    {% endfor %}
-                </select>
-            </div>
+        {% if search_query %}
+            <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded">
+                <p class="text-blue-800">Found <strong>{{ results_count }}</strong> vehicles matching "{{ search_query }}"</p>
+                {% if vehicles %}
+                    <form method="post" action="">
+                        {% csrf_token %}
+                        <div class="mb-4 mt-4">
+                            <label for="vehicle_id" class="block font-semibold mb-2">Select Vehicle:</label>
+                            <select name="vehicle_id" id="vehicle_id" required class="w-full border border-gray-300 rounded px-3 py-2">
+                                <option value="">-- Choose a vehicle --</option>
+                                {% for vehicle in vehicles %}
+                                    <option value="{{ vehicle.id }}">{{ vehicle.make }} {{ vehicle.model }} ({{ vehicle.year }}) - {{ vehicle.fuel_type }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
 
-            <div class="mb-4">
-                <label for="nickname" class="block font-semibold mb-1">Nickname (optional):</label>
-                <input type="text" name="nickname" id="nickname" placeholder="Enter a nickname for your vehicle" class="w-full border border-gray-300 rounded px-3 py-2" />
-            </div>
+                        <div class="mb-4">
+                            <label for="nickname" class="block font-semibold mb-1">Nickname (optional):</label>
+                            <input type="text" name="nickname" id="nickname" placeholder="e.g., 'My Honda'" class="w-full border border-gray-300 rounded px-3 py-2" />
+                        </div>
 
-            <div class="mb-6">
-                <label for="maintenance_status" class="block font-semibold mb-1">Maintenance Status:</label>
-                <select name="maintenance_status" id="maintenance_status" required class="w-full border border-gray-300 rounded px-3 py-2">
-                    <option value="good">Good</option>
-                    <option value="average">Average</option>
-                    <option value="poor">Poor</option>
-                </select>
+                        <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded shadow hover:bg-green-700 transition">
+                            Add Vehicle
+                        </button>
+                    </form>
+                {% else %}
+                    <p class="text-red-600 mt-2">❌ No vehicles found. Try a different search term.</p>
+                {% endif %}
             </div>
-
-            <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded shadow hover:bg-green-700 transition">
-                Add Vehicle
-            </button>
-        </form>
-    </main>
+        {% else %}
+            <div class="p-4 bg-yellow-50 border border-yellow-200 rounded text-yellow-800">
+                🔍 Enter a vehicle make, model, or year above to search from our database of 114,000+ vehicles.
+            </div>
+        {% endif %}
 
     <footer class="w-full max-w-3xl mt-8 text-left">
         <a href="{% url 'vehicle_list' %}" class="text-blue-600 hover:underline">← Back to Vehicles</a>

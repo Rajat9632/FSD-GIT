@@ -176,15 +176,21 @@ def vehicle_list(request):
 
 def vehicle_add(request):
     search_form = VehicleSearchForm(request.GET or None)
-    vehicles = Car.objects.filter(is_user_vehicle=False)
+    vehicles = []  # Start with empty list
+    search_query = ""
+    
+    # Only show vehicles if a search query is provided
     if search_form.is_valid():
-        query = search_form.cleaned_data.get('search_query')
-        if query:
-            vehicles = vehicles.filter(
+        query = search_form.cleaned_data.get('search_query', '').strip()
+        if query and len(query) >= 2:  # Require at least 2 characters
+            search_query = query
+            vehicles = Car.objects.filter(
+                is_user_vehicle=False,
                 Q(make__icontains=query) |
                 Q(model__icontains=query) |
                 Q(year__icontains=query)
-            )
+            )[:100]  # Limit to 100 results for performance
+    
     if request.method == 'POST':
         vehicle_id = request.POST.get('vehicle_id')
         nickname = request.POST.get('nickname')
@@ -198,9 +204,12 @@ def vehicle_add(request):
                 return redirect('vehicle_list')
             except Car.DoesNotExist:
                 pass
+    
     return render(request, 'carbontracker/vehicle_add.html', {
         'search_form': search_form,
         'vehicles': vehicles,
+        'search_query': search_query,
+        'results_count': vehicles.count() if hasattr(vehicles, 'count') else len(vehicles),
     })
 
 class RouteForm(forms.ModelForm):
