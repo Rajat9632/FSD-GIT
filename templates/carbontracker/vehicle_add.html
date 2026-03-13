@@ -13,6 +13,12 @@
     </header>
 
     <main class="w-full max-w-3xl bg-white rounded shadow p-6">
+        {% if error_msg %}
+            <div class="mb-6 p-4 bg-red-100 border border-red-400 rounded text-red-700">
+                ❌ {{ error_msg }}
+            </div>
+        {% endif %}
+
         <form method="get" action="" class="mb-6">
             <div class="mb-4">
                 <label for="search_query" class="block font-semibold mb-2">Search Vehicles:</label>

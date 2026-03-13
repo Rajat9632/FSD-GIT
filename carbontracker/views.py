@@ -174,49 +174,70 @@ def vehicle_list(request):
     vehicles = Car.objects.filter(is_user_vehicle=True)
     return render(request, 'carbontracker/vehicle_list.html', {'vehicles': vehicles})
 
+@login_required
 def vehicle_add(request):
-    search_form = VehicleSearchForm(request.GET or None)
+    """Add a vehicle from database to user's vehicles"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
     vehicles = []
     search_query = ""
     results_count = 0
+    error_msg = None
     
-    # Only show vehicles if a search query is provided
-    if request.GET:  # User submitted the search form
-        search_query = request.GET.get('search_query', '').strip()
-        if search_query and len(search_query) >= 2:
-            try:
-                # Search in database
-                vehicles = list(Car.objects.filter(
-                    is_user_vehicle=False,
-                    Q(make__icontains=search_query) |
-                    Q(model__icontains=search_query) |
-                    Q(year__icontains=search_query)
-                )[:100])  # Limit to 100 results
-                results_count = len(vehicles)
-            except Exception as e:
-                print(f"Search error: {e}")
-                vehicles = []
-                results_count = 0
+    try:
+        # Check if user submitted a search
+        if request.GET:
+            search_query = request.GET.get('search_query', '').strip()
+            logger.info(f"Vehicle search: '{search_query}'")
+            
+            if search_query and len(search_query) >= 2:
+                try:
+                    # Search in database
+                    query_obj = Car.objects.filter(is_user_vehicle=False).filter(
+                        Q(make__icontains=search_query) |
+                        Q(model__icontains=search_query) |
+                        Q(year__icontains=search_query)
+                    )[:100]
+                    vehicles = list(query_obj)
+                    results_count = len(vehicles)
+                    logger.info(f"Found {results_count} vehicles")
+                except Exception as search_err:
+                    logger.error(f"Search error: {search_err}", exc_info=True)
+                    error_msg = f"Search failed: {str(search_err)}"
+                    vehicles = []
+        
+        # Handle POST request (adding vehicle)
+        if request.method == 'POST':
+            vehicle_id = request.POST.get('vehicle_id')
+            nickname = request.POST.get('nickname', '').strip()
+            logger.info(f"Adding vehicle: ID={vehicle_id}, nickname={nickname}")
+            
+            if vehicle_id:
+                try:
+                    vehicle = Car.objects.get(id=vehicle_id, is_user_vehicle=False)
+                    vehicle.pk = None
+                    vehicle.nickname = nickname or f"{vehicle.make} {vehicle.model}"
+                    vehicle.is_user_vehicle = True
+                    vehicle.save()
+                    logger.info("Vehicle added successfully")
+                    return redirect('vehicle_list')
+                except Car.DoesNotExist:
+                    logger.warning(f"Vehicle {vehicle_id} not found")
+                    error_msg = "Vehicle not found"
+                except Exception as e:
+                    logger.error(f"Error adding vehicle: {e}", exc_info=True)
+                    error_msg = f"Error: {str(e)}"
     
-    if request.method == 'POST':
-        vehicle_id = request.POST.get('vehicle_id')
-        nickname = request.POST.get('nickname')
-        if vehicle_id:
-            try:
-                vehicle = Car.objects.get(id=vehicle_id, is_user_vehicle=False)
-                vehicle.pk = None  # Create a new instance
-                vehicle.nickname = nickname or f"{vehicle.make} {vehicle.model}"
-                vehicle.is_user_vehicle = True
-                vehicle.save()
-                return redirect('vehicle_list')
-            except Car.DoesNotExist:
-                pass
+    except Exception as e:
+        logger.error(f"Unexpected error in vehicle_add: {e}", exc_info=True)
+        error_msg = f"Unexpected error: {str(e)}"
     
     return render(request, 'carbontracker/vehicle_add.html', {
-        'search_form': search_form,
         'vehicles': vehicles,
         'search_query': search_query,
         'results_count': results_count,
+        'error_msg': error_msg,
     })
 
 class RouteForm(forms.ModelForm):
