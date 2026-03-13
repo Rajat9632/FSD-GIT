@@ -418,3 +418,41 @@ def debug_vehicles(request):
         'sample_vehicles': samples,
         'status': 'OK' if available > 0 else 'ERROR - No vehicles in database'
     })
+
+
+@require_http_methods(["GET"])
+def debug_import_vehicles(request):
+    """Manual vehicle import trigger for debugging"""
+    from carbontracker.apps import CarbontrackerConfig
+    from django.db import connection
+    
+    results = {
+        'message': 'Starting manual vehicle import...',
+        'database_ok': False,
+        'import_status': 'Not started'
+    }
+    
+    # Check database
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+        results['database_ok'] = True
+        results['message'] = 'Database connection OK'
+    except Exception as e:
+        results['database_ok'] = False
+        results['message'] = f'Database error: {e}'
+        return JsonResponse(results)
+    
+    # Try import
+    try:
+        app_config = CarbontrackerConfig('carbontracker', None)
+        app_config.import_vehicles()
+        results['import_status'] = 'SUCCESS'
+        
+        # Check final count
+        available = Car.objects.filter(is_user_vehicle=False).count()
+        results['vehicles_in_database'] = available
+    except Exception as e:
+        results['import_status'] = f'FAILED: {e}'
+    
+    return JsonResponse(results)
