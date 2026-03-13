@@ -176,20 +176,27 @@ def vehicle_list(request):
 
 def vehicle_add(request):
     search_form = VehicleSearchForm(request.GET or None)
-    vehicles = []  # Start with empty list
+    vehicles = []
     search_query = ""
+    results_count = 0
     
     # Only show vehicles if a search query is provided
-    if search_form.is_valid():
-        query = search_form.cleaned_data.get('search_query', '').strip()
-        if query and len(query) >= 2:  # Require at least 2 characters
-            search_query = query
-            vehicles = Car.objects.filter(
-                is_user_vehicle=False,
-                Q(make__icontains=query) |
-                Q(model__icontains=query) |
-                Q(year__icontains=query)
-            )[:100]  # Limit to 100 results for performance
+    if request.GET:  # User submitted the search form
+        search_query = request.GET.get('search_query', '').strip()
+        if search_query and len(search_query) >= 2:
+            try:
+                # Search in database
+                vehicles = list(Car.objects.filter(
+                    is_user_vehicle=False,
+                    Q(make__icontains=search_query) |
+                    Q(model__icontains=search_query) |
+                    Q(year__icontains=search_query)
+                )[:100])  # Limit to 100 results
+                results_count = len(vehicles)
+            except Exception as e:
+                print(f"Search error: {e}")
+                vehicles = []
+                results_count = 0
     
     if request.method == 'POST':
         vehicle_id = request.POST.get('vehicle_id')
@@ -209,7 +216,7 @@ def vehicle_add(request):
         'search_form': search_form,
         'vehicles': vehicles,
         'search_query': search_query,
-        'results_count': vehicles.count() if hasattr(vehicles, 'count') else len(vehicles),
+        'results_count': results_count,
     })
 
 class RouteForm(forms.ModelForm):
